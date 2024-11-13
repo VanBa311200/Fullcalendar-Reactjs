@@ -1,0 +1,35 @@
+/* #root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+ */
+
+.container {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+}
+
+.sidebar-container {
+  padding: 10px;
+  padding-top: 50px;
+  min-width: 350px;
+}
+
+.header-toolbar {
+  width: 100%;
+  padding-block: 10px;
+  display: flex;
+  /* position: relative; */
+  justify-content: space-between;
+}
+
+.dropdown-toolbar {
+  width: fit-content;
+}
+
+.dropdown-toolbar .Dropdown-menu {
+  width: fit-content;
+}
