@@ -11,7 +11,7 @@ import Dropdown from "react-dropdown";
 
 import Popup from "./components/Popup";
 import DatePickerCustome from "./components/DatePickerCustome";
-import { addMoreDayToDate } from "./utils";
+// import { addMoreDayToDate } from "./utils";
 
 import "./App.css";
 import "react-dropdown/style.css";
@@ -101,10 +101,6 @@ export default function Calendar() {
   };
 
   useEffect(() => {
-    dragula({
-      containers: [sidebarEventsRef],
-    });
-
     new ThirdPartyDraggable(sidebarEventsRef, {
       itemSelector: ".item-event",
       mirrorSelector: ".gu-mirror", // the dragging element that dragula renders
@@ -120,12 +116,28 @@ export default function Calendar() {
   return (
     <div className="container">
       {/* Dropdown for view selection */}
-      <div className="sidebar-container" ref={sidebarEventsRef}>
-        {sideBarEvents.map((item, index) => (
-          <div key={index} className="item-event">
-            {item.title}
+      <div className="sidebar-container">
+        <div id="external-events">
+          <p>
+            <strong>Draggable Events</strong>
+          </p>
+
+          <div class="fc-event fc-h-event fc-daygrid-event fc-daygrid-block-event">
+            <div class="fc-event-main">My Event 1</div>
           </div>
-        ))}
+          <div class="fc-event fc-h-event fc-daygrid-event fc-daygrid-block-event">
+            <div class="fc-event-main">My Event 2</div>
+          </div>
+          <div class="fc-event fc-h-event fc-daygrid-event fc-daygrid-block-event">
+            <div class="fc-event-main">My Event 3</div>
+          </div>
+          <div class="fc-event fc-h-event fc-daygrid-event fc-daygrid-block-event">
+            <div class="fc-event-main">My Event 4</div>
+          </div>
+          <div class="fc-event fc-h-event fc-daygrid-event fc-daygrid-block-event">
+            <div class="fc-event-main">My Event 5</div>
+          </div>
+        </div>
       </div>
       <div style={{ height: "100vh", width: "100vw" }}>
         <div className="header-toolbar">
@@ -136,7 +148,7 @@ export default function Calendar() {
             value={selectedView}
           />
           <DatePickerCustome onChange={handleDatePickerChange} />
-          <div className=""></div>
+          <div />
         </div>
 
         <FullCalendar
@@ -151,6 +163,10 @@ export default function Calendar() {
           events={events}
           eventBackgroundColor="blue"
           eventMinHeight={50}
+          drop={function (info) {
+            // remove the element from the "Draggable Events" list
+            info.draggedEl.parentNode.removeChild(info.draggedEl);
+          }}
         />
 
         {showPopup && (
