@@ -223,6 +223,20 @@ export default function Calendar() {
             { id: "c", title: "Auditorium C" },
           ]}
           eventReceive={handleEventReceive}
+          eventChange={(arg) => {
+            const { event } = arg;
+            const findIndexOldItem = (oldItem) =>
+              stateCalendar.calendarEvents.findIndex(
+                (item) => item.id === oldItem.id,
+              );
+
+            const index = findIndexOldItem(event);
+
+            let newArr = stateCalendar.calendarEvents;
+            newArr[index] = event;
+
+            setStateCalendar((prev) => ({ ...prev, calendarEvents: newArr }));
+          }}
         />
 
         {showPopup && (
