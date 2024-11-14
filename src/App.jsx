@@ -8,13 +8,14 @@ import Dropdown from "react-dropdown";
 
 import Popup from "./components/Popup";
 import DatePickerCustome from "./components/DatePickerCustome";
-import { getRandomColor, getDiffOf2Days } from "./utils";
+import { getRandomColor } from "./utils";
+import { VIEW_OPTIONS } from "./constants";
 
 import "./App.css";
 import "react-dropdown/style.css";
-// import "@fullcalendar/common/main.css"; // Import common styles
+import SideBar from "./components/SideBar";
 
-const events = [
+const calendarEvents = [
   {
     start: "2024-11-13T11:30:00+07:00",
     end: "2024-11-13T13:30:00+07:00",
@@ -39,20 +40,13 @@ const events = [
   },
 ];
 
-// View options
-const viewOptions = [
-  { value: "dayGridMonth", label: "Month View" },
-  { value: "dayGridWeek", label: "Week View" },
-  { value: "resourceTimeGridDay", label: "Day View" },
-];
-
 export default function Calendar() {
   const fullcalendarRef = useRef();
   const draggableEl = useRef();
 
   // State to manage selected view
   const [stateCalendar, setStateCalendar] = useState({
-    calendarEvents: [...events],
+    calendarEvents,
     selectedView: "dayGridMonth",
   });
 
@@ -106,7 +100,6 @@ export default function Calendar() {
     const [start, end] = dates;
     let endDay = new Date(end);
     endDay.setDate(new Date(end).getDate() + 1);
-    const diff = getDiffOf2Days(start, end) + 1;
 
     const calendarApi = fullcalendarRef.current.getApi();
 
@@ -118,7 +111,6 @@ export default function Calendar() {
 
   // handle event receive
   const handleEventReceive = (eventInfo) => {
-    console.log("eventInfo", eventInfo);
     const { title, backgroundColor, id, startStr, allDay } = eventInfo.event;
     const newEvent = {
       id,
@@ -128,8 +120,6 @@ export default function Calendar() {
       color: backgroundColor,
     };
 
-    console.log("newEvent", newEvent);
-
     setStateCalendar((state) => {
       return {
         ...state,
@@ -137,8 +127,6 @@ export default function Calendar() {
       };
     });
   };
-
-  console.log("calendarEvents", stateCalendar.calendarEvents);
 
   useEffect(() => {
     new Draggable(draggableEl.current, {
@@ -159,32 +147,12 @@ export default function Calendar() {
 
   return (
     <div className="container">
-      {/* Dropdown for view selection */}
-      <div className="sidebar-container" ref={draggableEl}>
-        <div id="external-events">
-          <p>
-            <strong>Draggable Events</strong>
-          </p>
-
-          {externalEvents.map((item, key) => (
-            <div
-              className="fc-event fc-h-event fc-daygrid-event fc-daygrid-block-event"
-              key={key}
-              style={{ backgroundColor: item.color }}
-              data-color={item.color}
-              data-id={item.id}
-              data-title={item.title}
-            >
-              <div className="fc-event-main">{item.title}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <SideBar externalEvents={externalEvents} ref={draggableEl} />
       <div style={{ height: "100vh", width: "100vw" }}>
         <div className="header-toolbar">
           <Dropdown
             className="dropdown-toolbar"
-            options={viewOptions}
+            options={VIEW_OPTIONS}
             onChange={handleViewChange}
             value={stateCalendar.selectedView}
           />

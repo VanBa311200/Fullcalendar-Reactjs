@@ -4,12 +4,6 @@
   display: flex;
 }
 
-.sidebar-container {
-  padding: 10px;
-  padding-top: 62px;
-  width: 350px;
-}
-
 .header-toolbar {
   width: 100%;
   padding-block: 10px;
@@ -24,24 +18,4 @@
 
 .dropdown-toolbar .Dropdown-menu {
   width: fit-content;
-}
-
-/* external-events */
-#external-events {
-  width: auto;
-  padding: 0 10px;
-  border: 1px solid #ccc;
-  background: #eee;
-}
-
-#external-events .fc-event {
-  cursor: move;
-  margin-block: 3px;
-  padding: 5px;
-  border: none;
-}
-
-.fc-event .fc-event-main {
-  text-wrap: pretty;
-  color: #222 !important;
 }
