@@ -1,33 +1,29 @@
 import React, { useState, useRef, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
-import dayGridPlugin from "@fullcalendar/daygrid";
+import interactionPlugin, { Draggable } from "@fullcalendar/interaction";
 import timeGridPlugin from "@fullcalendar/timegrid";
-import interactionPlugin, {
-  ThirdPartyDraggable,
-  Draggable,
-} from "@fullcalendar/interaction";
-import dragula from "react-dragula";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import resourceTimeGridPlugin from "@fullcalendar/resource-timegrid";
 import Dropdown from "react-dropdown";
 
 import Popup from "./components/Popup";
 import DatePickerCustome from "./components/DatePickerCustome";
-// import { addMoreDayToDate } from "./utils";
+import { getRandomColor, getDiffOf2Days } from "./utils";
 
 import "./App.css";
 import "react-dropdown/style.css";
-import "@fullcalendar/common/main.css"; // Import common styles
+// import "@fullcalendar/common/main.css"; // Import common styles
 
 const events = [
   {
-    groupId: "12",
     start: "2024-11-13T11:30:00+07:00",
     end: "2024-11-13T13:30:00+07:00",
     title: "Meeting",
     backgroundColor: "blue",
+    color: "blue",
     borderColor: "blue",
   },
   {
-    groupId: "13",
     start: "2024-11-13T06:30:00+07:00",
     end: "2024-11-13T07:30:00+07:00",
     title: "Swiming",
@@ -35,7 +31,6 @@ const events = [
     borderColor: "blue",
   },
   {
-    groupId: "15",
     start: "2024-11-14T08:00:00+07:00",
     end: "2024-11-14T11:30:00+07:00",
     title: "Meeting",
@@ -44,34 +39,57 @@ const events = [
   },
 ];
 
+// View options
+const viewOptions = [
+  { value: "dayGridMonth", label: "Month View" },
+  { value: "dayGridWeek", label: "Week View" },
+  { value: "resourceTimeGridDay", label: "Day View" },
+];
+
 export default function Calendar() {
   const fullcalendarRef = useRef();
-  const sidebarEventsRef = useRef();
+  const draggableEl = useRef();
 
   // State to manage selected view
-  const [selectedView, setSelectedView] = useState("dayGridMonth");
+  const [stateCalendar, setStateCalendar] = useState({
+    calendarEvents: [...events],
+    selectedView: "dayGridMonth",
+  });
+
+  const [externalEvents, setExternalEvents] = useState([
+    {
+      id: 1,
+      title:
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat",
+      color: getRandomColor(),
+    },
+    {
+      id: 2,
+      title:
+        "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium",
+      color: getRandomColor(),
+    },
+    {
+      id: 3,
+      title:
+        "But I must explain to you how all this mistaken idea of denouncing pleasure and praising pain was born and I will give you a complete account of the system",
+      color: getRandomColor(),
+    },
+    {
+      id: 4,
+      title:
+        "At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident",
+      color: getRandomColor(),
+    },
+  ]);
   const [showPopup, setShowPopup] = useState(false);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
-
-  // View options
-  const viewOptions = [
-    { value: "dayGridMonth", label: "Month View" },
-    { value: "dayGridWeek", label: "Week View" },
-    { value: "dayGridDay", label: "Day View" },
-  ];
-
-  const externalEvents = [
-    { title: "Jobs 1", color: "#0097a7", custom: "fdsfdsfds" },
-    { title: "Jobs 2", color: "#f44336" },
-    { title: "Jobs 3", color: "#f57f17" },
-    { title: "Jobs 4", color: "#90a4ae" },
-  ];
 
   // Handle view change
   const handleViewChange = ({ value }) => {
     const calendarApi = fullcalendarRef.current.getApi();
     calendarApi.changeView(value);
-    setSelectedView(value);
+    setStateCalendar((prev) => ({ ...prev, selectedView: value }));
   };
 
   const handleDateClick = (arg) => {
@@ -88,26 +106,52 @@ export default function Calendar() {
     const [start, end] = dates;
     let endDay = new Date(end);
     endDay.setDate(new Date(end).getDate() + 1);
+    const diff = getDiffOf2Days(start, end) + 1;
 
     const calendarApi = fullcalendarRef.current.getApi();
 
     if (start && end) {
-      calendarApi.changeView("timeGrid");
-      calendarApi.setOption("visibleRange", {
-        start,
-        end: endDay,
-      });
+      calendarApi.changeView("timeGrid", { start, end: endDay });
+      setStateCalendar((prev) => ({ ...prev, selectedView: "timeGrid" }));
     }
   };
 
+  // handle event receive
+  const handleEventReceive = (eventInfo) => {
+    console.log("eventInfo", eventInfo);
+    const { title, backgroundColor, id, startStr, allDay } = eventInfo.event;
+    const newEvent = {
+      id,
+      title,
+      allDay,
+      start: new Date(startStr),
+      color: backgroundColor,
+    };
+
+    console.log("newEvent", newEvent);
+
+    setStateCalendar((state) => {
+      return {
+        ...state,
+        calendarEvents: [...stateCalendar.calendarEvents, newEvent],
+      };
+    });
+  };
+
+  console.log("calendarEvents", stateCalendar.calendarEvents);
+
   useEffect(() => {
-    new ThirdPartyDraggable(sidebarEventsRef, {
-      itemSelector: ".item-event",
-      mirrorSelector: ".gu-mirror", // the dragging element that dragula renders
-      eventData: function (eventEl) {
-        console.log("eventEl", eventEl);
+    new Draggable(draggableEl.current, {
+      itemSelector: ".fc-event",
+      eventData: (eventEl) => {
+        const id = eventEl.getAttribute("data-id");
+        const title = eventEl.getAttribute("data-title");
+        const color = eventEl.getAttribute("data-color");
+
         return {
-          title: eventEl.innerText,
+          id,
+          title,
+          color,
         };
       },
     });
@@ -116,27 +160,24 @@ export default function Calendar() {
   return (
     <div className="container">
       {/* Dropdown for view selection */}
-      <div className="sidebar-container">
+      <div className="sidebar-container" ref={draggableEl}>
         <div id="external-events">
           <p>
             <strong>Draggable Events</strong>
           </p>
 
-          <div class="fc-event fc-h-event fc-daygrid-event fc-daygrid-block-event">
-            <div class="fc-event-main">My Event 1</div>
-          </div>
-          <div class="fc-event fc-h-event fc-daygrid-event fc-daygrid-block-event">
-            <div class="fc-event-main">My Event 2</div>
-          </div>
-          <div class="fc-event fc-h-event fc-daygrid-event fc-daygrid-block-event">
-            <div class="fc-event-main">My Event 3</div>
-          </div>
-          <div class="fc-event fc-h-event fc-daygrid-event fc-daygrid-block-event">
-            <div class="fc-event-main">My Event 4</div>
-          </div>
-          <div class="fc-event fc-h-event fc-daygrid-event fc-daygrid-block-event">
-            <div class="fc-event-main">My Event 5</div>
-          </div>
+          {externalEvents.map((item, key) => (
+            <div
+              className="fc-event fc-h-event fc-daygrid-event fc-daygrid-block-event"
+              key={key}
+              style={{ backgroundColor: item.color }}
+              data-color={item.color}
+              data-id={item.id}
+              data-title={item.title}
+            >
+              <div className="fc-event-main">{item.title}</div>
+            </div>
+          ))}
         </div>
       </div>
       <div style={{ height: "100vh", width: "100vw" }}>
@@ -145,7 +186,7 @@ export default function Calendar() {
             className="dropdown-toolbar"
             options={viewOptions}
             onChange={handleViewChange}
-            value={selectedView}
+            value={stateCalendar.selectedView}
           />
           <DatePickerCustome onChange={handleDatePickerChange} />
           <div />
@@ -153,20 +194,35 @@ export default function Calendar() {
 
         <FullCalendar
           ref={fullcalendarRef}
-          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          plugins={[
+            dayGridPlugin,
+            timeGridPlugin,
+            interactionPlugin,
+            resourceTimeGridPlugin,
+          ]}
           height={"100%"}
-          initialView={selectedView}
-          droppable
+          initialView={stateCalendar.selectedView}
+          editable
+          droppable={false}
           selectable
           headerToolbar={false}
           dateClick={handleDateClick}
-          events={events}
-          eventBackgroundColor="blue"
-          eventMinHeight={50}
+          events={stateCalendar.calendarEvents}
           drop={function (info) {
             // remove the element from the "Draggable Events" list
-            info.draggedEl.parentNode.removeChild(info.draggedEl);
+            const id = info.draggedEl.getAttribute("data-id");
+
+            setExternalEvents((state) => {
+              const ls = state.filter((item) => item.id != id);
+              return ls;
+            });
           }}
+          resources={[
+            { id: "a", title: "Auditorium A" },
+            { id: "b", title: "Auditorium B" },
+            { id: "c", title: "Auditorium C" },
+          ]}
+          eventReceive={handleEventReceive}
         />
 
         {showPopup && (

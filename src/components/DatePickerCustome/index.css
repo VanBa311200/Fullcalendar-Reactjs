@@ -1,6 +1,13 @@
-.container-datepicker {
-}
-
 .react-datepicker-popper {
   z-index: 5 !important;
+}
+
+.custome-input-datepicker {
+  border: 1px solid #ccc;
+  outline: none;
+  border-radius: 0;
+  -webkit-border-radius: 0;
+  -moz-border-radius: 0;
+  -ms-border-radius: 0;
+  -o-border-radius: 0;
 }
